@@ -62,11 +62,13 @@ class ListingHelper extends AppHelper
 	}
 
 
-	public function getURI ($listing, $changes)
+	public function getURI ($listing, $changes = null)
 	{
-		// upravime..
 		$userParams = ClassRegistry::getObject('view')->viewVars['listingUserParams'];
-		$userParams[$listing['id']] = array_merge($userParams[$listing['id']], $changes);
+
+		// pripadne upravime..
+		if (!empty($changes))
+			$userParams[$listing['id']] = array_merge($userParams[$listing['id']], $changes);
 
 		// zakodujem..
 		$encoded = base64_encode(serialize($userParams));
@@ -81,5 +83,17 @@ class ListingHelper extends AppHelper
 	public function count ($listing)
 	{
 		return $listing['count'];
+	}
+
+
+	public function getFilterValue ($listing, $name)
+	{
+		$id = $listing['id'];
+		$userParams =& ClassRegistry::getObject('view')->viewVars['listingUserParams'][$id];
+
+		if (isset($userParams['filters'][$name]))
+			return $userParams['filters'][$name];
+
+		return '';
 	}
 }

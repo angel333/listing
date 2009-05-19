@@ -2,7 +2,7 @@
 
 class ListingComponent extends Object
 {
-    public $controller = null;
+	public $controller = null;
 	public $userParams = null;
 	public $currentId = 0;
 
@@ -28,6 +28,28 @@ class ListingComponent extends Object
 			!is_array($this->userParams)
 		)
 	   		$this->userParams = array ();
+		
+		// uzivatelske filtry
+		if (
+			isset($this->controller->data['ListingFilter']) &&
+			$formData =& $this->controller->data['ListingFilter'] &&
+			isset($formData['id']) &&
+			is_numeric($formData['id'])
+		)
+		{
+			$id = $formData['id'];
+
+			$this->userParams[$id]['filters'] = $formData;
+			unset($this->userParams[$id]['filters']['id']);
+
+			// smazat prazdny..
+			foreach ($this->userParams[$id]['filters'] as $key => $val)
+				if ($val == '')
+					unset($this->userParams[$id]['filters'][$key]);
+
+			// pokud nekdo hleda, je lepsi kdyz se dostane na prvni stranku..
+			$this->userParams[$id]['page'] = 1;
+		}
 	}
 
 
@@ -64,6 +86,15 @@ class ListingComponent extends Object
 		// filtry - z controlleru..
 		if (isset($params['filters']))
 			$modelParams['filters'] = $params['filters'];
+
+		// filtry od uzivatele
+		if (
+			isset($userParams['filters']) &&
+			is_array($userParams['filters'])
+		)
+			foreach ($userParams['filters'] as $key=>$val)
+				if (in_array($key, $params['userFilters']))
+					$modelParams['filters'][$key] = $val;
 
 		// <<< resulty sem >>>
 		$results = $model->$method($modelParams);
