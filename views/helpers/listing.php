@@ -65,16 +65,11 @@ class ListingHelper extends AppHelper
 	public function getURI ($listing, $changes)
 	{
 		// upravime..
-		$modified = array_merge($listing['userParams'], $changes);
-
-		// nepovine name - pro vice listingu..
-		if (isset($listing['name']))
-			$modified = array (
-				$listing['name'] => $modified,
-			);
+		$userParams = ClassRegistry::getObject('view')->viewVars['listingUserParams'];
+		$userParams[$listing['id']] = array_merge($userParams[$listing['id']], $changes);
 
 		// zakodujem..
-		$encoded = base64_encode(serialize($modified));
+		$encoded = base64_encode(serialize($userParams));
 
 		// vytvorie uri..
 		$uri = preg_replace('/:listingVars/', $encoded, $listing['URIRegex']);

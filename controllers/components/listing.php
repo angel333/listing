@@ -3,6 +3,9 @@
 class ListingComponent extends Object
 {
     public $controller = null;
+	public $userParams = null;
+	public $currentId = 0;
+
 
 	/**
 	 * Inicializace
@@ -14,26 +17,31 @@ class ListingComponent extends Object
 
 
 	/**
-	 * Vytvori listing
+	 * Startup
 	 */
-	public function make (&$model, $method, $params = array ())
+	public function startup (&$controller)
 	{
 		// najdeme spravnej listingVars - kdyz ne, tak array()
 		if (
 			empty($this->controller->params['listingVars']) ||
-			!($userParams = unserialize(base64_decode($this->controller->params['listingVars']))) ||
-			!is_array($userParams)
+			!($this->userParams = unserialize(base64_decode($this->controller->params['listingVars']))) ||
+			!is_array($this->userParams)
 		)
-	   		$userParams = array ();
-		elseif (isset($params['name']))
-			if
-			(
-				isset($userParams[$params['name']]) &&
-				is_array($userParams[$params['name']])
-			)
-				$userParams = $userParams[$params['name']];
-			else
-				$userParams = array ();
+	   		$this->userParams = array ();
+	}
+
+
+	/**
+	 * Vytvori listing
+	 */
+	public function make (&$model, $method, $params = array ())
+	{
+		if (isset($this->userParams[$this->currentId]))
+			$userParams = $this->userParams[$this->currentId];
+		else
+			$userParams = array (
+				'page' => 1,
+			);
 
 		// de facto default
 		$modelParams = array (
@@ -57,27 +65,25 @@ class ListingComponent extends Object
 		if (isset($params['filters']))
 			$modelParams['filters'] = $params['filters'];
 
-		// resulty sem..
+		// <<< resulty sem >>>
 		$results = $model->$method($modelParams);
-
-		// kvuli linkum pridame i to, co zadal user..
-		$results['userParams'] = $userParams;
 
 		// pocet stranek
 		$results['pages'] = (int)($results['meta']['count'] / $modelParams['limit']);
 		if (($results['meta']['count'] % $modelParams['limit']) > 0)
 			$results['pages']++;
 
-		if (isset($params['name']))
-			$results['name'] = $params['name'];
-
 		if (isset($params['URIRegex']))
 			$results['URIRegex'] = $params['URIRegex'];
 
-		$results['page'] = $modelParams['page'];
+		$results['page'] = $userParams['page'];
 
 		if (isset($results['meta']['count']))
 			$results['count'] = $results['meta']['count'];
+
+		$this->controller->viewVars['listingUserParams'][$this->currentId] = $userParams;
+		$results['id'] = $this->currentId;
+		$this->currentId++;
 
 		// a vratime..
 		return $results;
