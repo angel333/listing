@@ -16,10 +16,10 @@ Features:
  - pagination
  - multiple listings (with their paginations) on one page
  - it always uses custom model method - unlike in-built cakephp pagination
+ - filtering results (incl. searching)
 
 TODO:
 -----
- - filtering results (incl. searching)
  - sorting
 
 Author:
