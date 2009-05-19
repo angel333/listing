@@ -1,0 +1,60 @@
+==============================
+  Listing plugin for CakePHP
+==============================
+
+
+  If you have found any bugs, or you have any questions or feature requests,
+  please email me at andrew (at) ondrejsimek (dot) com, thank you.
+
+
+  !! This howto is not complete yet - if you want to know how this works, just
+  !! email me and I'll send you some examples.
+
+
+Features:
+---------
+ - pagination
+ - multiple listings (with their paginations) on one page
+ - it always uses custom model method - unlike in-built cakephp pagination
+
+TODO:
+-----
+ - filtering results (incl. searching)
+ - sorting
+
+Author:
+-------
+Ondrej Simek
+email: andrew@ondrejsimek.com
+web: http://ondrejsimek.com
+
+Github:
+-------
+http://github.com/angel333/sublayouts
+
+
+Usage:
+------
+Let's say we have PostsController and Post model. We want to list all posts
+from category 1 and category 2 on one page.
+
+1) Load the component and the helper
+
+  class PostsController extends AppController
+  {
+      public $components = array ('Listing.Listing');
+      public $helpers = array ('Listing.Listing');
+      ...
+
+2) You need a parameter where the information about current page, etc. will be
+   stored. So add it to your custom route in the config/routes.php - it must be
+   named 'listingVars'. (Note: This is the main trick of this plugin - it uses
+   only one parameter for everything - this parameter is actualy a serialized
+   array, encoded with base64_encode. It contains current page and sorting for
+   all listings on the page. That's why you can use multiple arrays easily.)
+
+  Router::connect('/all-posts/:listingVars', array ('controller' => 'posts', 'action' => 'listAll'));
+
+3) Now make your listing method in your model (models/post.php)
+
+  >> TO BE CONTINUED :)
