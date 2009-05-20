@@ -2,6 +2,9 @@
 
 class ListingHelper extends AppHelper
 {
+	public $helpers = array ('Form');
+
+
 	public function pagination ($listing)
 	{
 		$output = "<div class='pagination'>";
@@ -95,5 +98,13 @@ class ListingHelper extends AppHelper
 			return $userParams['filters'][$name];
 
 		return '';
+	}
+
+
+	public function filtersFormStart ($listing)
+	{
+		$output = $this->Form->create('ListingFilter', array ('url'=>ClassRegistry::getObject('view')->here));
+		$output .= $this->Form->hidden('ListingFilter.id', array('value'=>$listing['id']));
+		return $output;
 	}
 }
