@@ -274,11 +274,12 @@ class ListingHelper extends AppHelper
 		$output .= '<fieldset><legend>Results</legend><table><tr>';
 		$code .= "<fieldset><legend>Results</legend>\n\t<table>\n\t\t<tr>\n";
 
+		$code .= "<?foreach (\${$emulate}['schema'] as \$item):?>";
+		$code .= "\t\t\t<th><?=\$listing->sortLink(\$$emulate, \$item)?></th>\n";
+		$code .= "<?endforeach?>";
+
 		foreach ($listing['schema'] as $item)
-		{
 			$output .= '<th>' . $this->sortLink($listing, $item) . '</th>';
-			$code .= "\t\t\t<th><?=\$listing->sortLink(\$$emulate, \$item)?></th>\n";
-		}
 
 		$output .= '</tr>';
 		$code .= "\t\t</tr>\n";
