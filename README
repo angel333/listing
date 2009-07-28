@@ -40,10 +40,9 @@ Github:
 http://github.com/angel333/listing
 
 
-Usage:
-------
-Let's say we have PostsController and Post model. We want to list all posts
-from category 1 and category 2 on one page.
+Tutorial:
+---------
+Let's say we have PostsController and Post model. We want to list all posts.
 
 1) Load the component and the helper
 
@@ -95,3 +94,22 @@ from category 1 and category 2 on one page.
    but the most important is the textarea on the end of the scaffold - just copy
    the code from it and paste it into your view (replace the line you added in the
    previous step). Now you can easily modify the view code and make it look better.
+
+
+Multiple listings on one page:
+------------------------------
+This plugin can handle as many listings as you want. Just pass them to your view.
+
+
+Scaffolds:
+----------
+Scaffold is very useful feature - when you're creating the listing (in controller),
+use only scaffold in view ( $listing->scaffold($data) ), when you're done, just copy
+the code from the textarea to view and modify it.
+
+If your listing variable (in view) is not called $data, pass the name of the variable
+as second parameter to scaffold, e.g.:
+
+  $listing->scaffold($activeUsers, 'activeUsers')
+
+.. the code in textarea will use this name instead of $data.
