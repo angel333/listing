@@ -7,20 +7,26 @@
   please email me at andrew (at) ondrejsimek (dot) com, thank you.
 
 
-  !! This howto is not complete yet - if you want to know how this works, just
-  !! email me and I'll send you some examples.
-
-
 Features:
 ---------
+ - multiple listings on one page (with their own pagination, search boxes, etc.)
  - pagination
- - multiple listings (with their paginations) on one page
- - it always uses custom model method - unlike in-built cakephp pagination
- - filtering results (incl. searching)
+ - searching in results
+ - sorting
+ - can use custom model method
+ - scaffold
+ - echos the code of the scaffold (just copy & paste the code in your view
+   and modify it)
+ - no ajax - that's not a bug :) - I just like having everything working without
+   ajax first. Then I'm adding ajax where is needed. But I'll add ajax option in
+   a future version.
+
 
 TODO:
 -----
- - sorting
+ - make the code more readable :)
+ - add an option for ajax
+
 
 Author:
 -------
@@ -28,9 +34,10 @@ Ondrej Simek
 email: andrew@ondrejsimek.com
 web: http://ondrejsimek.com
 
+
 Github:
 -------
-http://github.com/angel333/sublayouts
+http://github.com/angel333/listing
 
 
 Usage:
@@ -40,21 +47,51 @@ from category 1 and category 2 on one page.
 
 1) Load the component and the helper
 
-  class PostsController extends AppController
-  {
-      public $components = array ('Listing.Listing');
-      public $helpers = array ('Listing.Listing');
-      ...
+   class PostsController extends AppController
+   {
+       public $components = array ('Listing.Listing');
+       public $helpers = array ('Listing.Listing');
+       ...
 
 2) You need a parameter where the information about current page, etc. will be
    stored. So add it to your custom route in the config/routes.php - it must be
    named 'listingVars'. (Note: This is the main trick of this plugin - it uses
    only one parameter for everything - this parameter is actualy a serialized
    array, encoded with base64_encode. It contains current page and sorting for
-   all listings on the page. That's why you can use multiple arrays easily.)
+   all listings on the page. That's why you can use multiple listings easily.)
 
-  Router::connect('/all-posts/:listingVars', array ('controller' => 'posts', 'action' => 'listAll'));
+   Router::connect('/all-posts/:listingVars', array ('controller' => 'posts', 'action' => 'index'));
 
-3) Now make your listing method in your model (models/post.php)
+3) Now add to your index() method in PostsController (controllers/posts_controller.php)
+   something like this:
 
-  >> TO BE CONTINUED :)
+   $this->set('data', $this->Listing->create($this->Post, array (
+       'default' => array (
+           'order' => 'Post.created DESC',
+           'limit' => 10,
+       ),
+       'user' => array (
+           'order' => array (
+               'Post.title',
+               'Post.name',
+               'Post.modified',
+           ),
+           'limit' => array (10, 25, 50, 100),
+           'search' => array (
+               'Post.title',
+               'Post.content',
+           ),
+       ),
+   )));
+
+   The array has part 'default' and 'user'. In 'default' are just parameters for
+   the model method. In 'user' you can specify, what the user can change and how.
+
+4) To the view method of this just write this:
+
+   <?=$listing->scaffold($data)?>
+
+5) Now you shoud get table with results, search boxes, pagination and sort links,
+   but the most important is the textarea on the end of the scaffold - just copy
+   the code from it and paste it into your view (replace the line you added in the
+   previous step). Now you can easily modify the view code and make it look better.

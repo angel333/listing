@@ -1,122 +1,207 @@
 <?php
 
+
 class ListingComponent extends Object
 {
+	/**
+	 * Controller object
+	 *
+	 * @var object
+	 */
 	public $controller = null;
+
+
+	/**
+	 * Filters, sorting, etc. from a form in view
+	 *
+	 * @var array
+	 */
 	public $userParams = null;
+
+
+	/**
+	 * Every listing you create will increase this variable (counter)
+	 *
+	 * @var integer
+	 */
 	public $currentId = 0;
 
 
 	/**
-	 * Inicializace
+	 * URI regex - it's just what you have in your routes.php
+	 *
+	 * Something like: '/blabla/:listingVars'
+	 *
+	 * @var string
+	 */
+	public $URIRegex = null;
+
+
+	/**
+	 * Initialization
+	 * 
+	 * @param object $controller
 	 */
 	public function initialize (&$controller)
 	{
 		$this->controller =& $controller;
-	}
 
-
-	/**
-	 * Startup
-	 */
-	public function startup (&$controller)
-	{
-		// najdeme spravnej listingVars - kdyz ne, tak array()
-		if (
-			empty($this->controller->params['listingVars']) ||
-			!($this->userParams = unserialize(base64_decode($this->controller->params['listingVars']))) ||
-			!is_array($this->userParams)
-		)
-	   		$this->userParams = array ();
-		
-		// uzivatelske filtry
-		if (
-			isset($this->controller->data['ListingFilter']) &&
-			$formData =& $this->controller->data['ListingFilter'] &&
-			isset($formData['id']) &&
-			is_numeric($formData['id'])
-		)
+		if (empty($this->URIRegex))
 		{
-			$id = $formData['id'];
-
-			$this->userParams[$id]['filters'] = $formData;
-			unset($this->userParams[$id]['filters']['id']);
-
-			// smazat prazdny..
-			foreach ($this->userParams[$id]['filters'] as $key => $val)
-				if ($val == '')
-					unset($this->userParams[$id]['filters'][$key]);
-
-			// pokud nekdo hleda, je lepsi kdyz se dostane na prvni stranku..
-			$this->userParams[$id]['page'] = 1;
+			$route = Router::currentRoute();
+			$this->URIRegex = $route[0];
 		}
 	}
 
 
 	/**
-	 * Vytvori listing
+	 * Saves user parameters from POST and GET to $this->userParams
+	 *
+	 * @param object $controller
 	 */
-	public function make (&$model, $method, $params = array ())
+	public function startup (&$controller)
 	{
-		if (isset($this->userParams[$this->currentId]))
-			$userParams = $this->userParams[$this->currentId];
-		else
-			$userParams = array (
-				'page' => 1,
-			);
+		// Save listingVars (the param in config/routes.php) to $this->userParams - or just empty array if not any
+		if (
+			empty($this->controller->params['listingVars']) ||
+			!($this->userParams = unserialize(base64_decode($this->controller->params['listingVars']))) ||
+			!is_array($this->userParams)
+		)
+			$this->userParams = array ();
+		
+		// Saves user filters from POST (form) to $this->userParams['filters']
+		if (!empty($this->controller->data))
+		{
+			foreach ($this->controller->data as $key => $val)
+			{
+				$exploded = explode('-', $key);
+				if ($exploded[0] == 'ListingVars')
+				{
+					$id = $exploded[1];
 
-		// de facto default
+					if (!isset($this->userParams[$id]))
+						$this->userParams[$id] = array ();
+
+					$this->userParams[$id] = array_merge($this->userParams[$id], $val);
+
+					// Go to first page when params are changed.
+					$this->userParams[$id]['page'] = 1;
+
+					$encoded = base64_encode(serialize($this->userParams));
+					$newURI = preg_replace('/:listingVars/', $encoded, $this->URIRegex);
+					$controller->redirect($newURI);
+				}
+			}
+		}
+
+		// This will save all params to $controller->data, so it'll be visible in forms.
+		foreach ($this->userParams as $id => $val)
+			$controller->data["ListingVars-$id"] = $val;
+	}
+
+
+	/**
+	 * Creates a listing
+	 * - creates an array of listing method parameters - $modelParams
+	 * - then gets the results from the model
+	 *
+	 * @param object $model
+	 * @param array $params Parameters for the listing method
+	 */
+	public function create (&$model, $params = array ())
+	{
 		$modelParams = array (
+			'conditions' => array (),
 			'page' => 1,
-			'limit' => 50,
 		);
 
-		// nahazime veci od usera do modelParams..
-		if (
-			isset($userParams['page']) &&
-			is_numeric($userParams['page']) &&
-			$userParams['page'] > 0
-		)
-			$modelParams['page'] = $userParams['page'];
+		// Default parameters
+		$modelParams = array_merge($modelParams, $params['default']);
 
-		// limit je z controlleru, ne od usera
-		if (isset($params['limit']))
-			$modelParams['limit'] = $params['limit'];
+		// The default method is 'listing'
+		if (empty($params['method']))
+			$params['method'] = 'find';
 
-		// filtry - z controlleru..
-		if (isset($params['filters']))
-			$modelParams['filters'] = $params['filters'];
+		// User parameters
+		if (empty($this->userParams[$this->currentId]))
+			$this->userParams[$this->currentId] = array();
+		else
+			$modelParams = $this->processUserParams($modelParams, $params['user']);
 
-		// filtry od uzivatele
-		if (
-			isset($userParams['filters']) &&
-			is_array($userParams['filters'])
-		)
-			foreach ($userParams['filters'] as $key=>$val)
-				if (in_array($key, $params['userFilters']))
-					$modelParams['filters'][$key] = $val;
+		// <<< GET THE RESULTS >>>
+		$results = array();
+		$results['data'] = $model->$params['method']('all', $modelParams);
+		$results['count'] = $model->$params['method']('count', array ('conditions' => $modelParams['conditions']));
 
-		// <<< resulty sem >>>
-		$results = $model->$method($modelParams);
+		$results['schema'] = array();
+		if (empty($modelParams['fields']))
+			foreach ($model->_schema as $key => $val)
+				$results['schema'][] = "{$model->alias}.$key";
+		else
+			$results['schema'] = $modelParams['fields'];
 
-		// pocet stranek
-		$results['pages'] = (int)($results['meta']['count'] / $modelParams['limit']);
-		if (($results['meta']['count'] % $modelParams['limit']) > 0)
-			$results['pages']++;
+		$results['page'] = $modelParams['page'];
+		$results['URIRegex'] = $this->URIRegex;
+		$results['allowedUserParams'] = $params['user'];
+		$results['modelName'] = $model->alias;
+		
+		// An important variable for the Listing helper
+		$this->controller->viewVars['listingUserParams'][$this->currentId] = $this->userParams[$this->currentId];
+		$this->controller->data["ListingVars-{$this->currentId}"] = $this->userParams[$this->currentId];
 
-		if (isset($params['URIRegex']))
-			$results['URIRegex'] = $params['URIRegex'];
+		// Counts pages
+		if (empty($modelParams))
+			$results['pages'] = 1;
+		else
+			$results['pages'] = (int)($results['count'] / $modelParams['limit']);
+			if (($results['count'] % $modelParams['limit']) > 0)
+				$results['pages']++;
 
-		$results['page'] = $userParams['page'];
-
-		if (isset($results['meta']['count']))
-			$results['count'] = $results['meta']['count'];
-
-		$this->controller->viewVars['listingUserParams'][$this->currentId] = $userParams;
+		// Assigning an id to this listing
 		$results['id'] = $this->currentId;
 		$this->currentId++;
 
-		// a vratime..
+		// Finally, return the results..
 		return $results;
+	}
+
+
+	/**
+	 * Validates user parameters and merge them into model parameters
+	 *
+	 * @param array $modelParams
+	 * @param array $allowed what is allowed to user
+	 * @return array
+	 */
+	private function processUserParams ($modelParams, $allowed)
+	{
+		// Gets user parameters for the listing
+		if (isset($this->userParams[$this->currentId]))
+			$userParams = $this->userParams[$this->currentId];
+		else
+			$userParams = array ();
+		
+		// Setting page
+		if (isset($userParams['page']) && is_numeric($userParams['page']))
+			$modelParams['page'] = $userParams['page'];
+		else
+			$modelParams['page'] = 1;
+
+		// Validation of parameters from user
+		if (isset($userParams['search']))
+			foreach ($userParams['search'] as $key => $val)
+				foreach ($val as $key2 => $val2)
+					if (in_array("$key.$key2", $allowed['search']))
+						$modelParams['conditions']["$key.$key2 LIKE"] = "%$val2%";
+
+		if (isset($userParams['limit']))
+			if (in_array($userParams['limit'], $allowed['limit']))
+				$modelParams['limit'] = $userParams['limit'];
+
+		if (isset($userParams['order']))
+			if (in_array($userParams['order'], $allowed['order']))
+				$modelParams['order'] = $userParams['order'];
+
+		return $modelParams;
 	}
 }
