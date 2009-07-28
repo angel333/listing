@@ -150,12 +150,14 @@ class ListingComponent extends Object
 		$this->controller->data["ListingVars-{$this->currentId}"] = $this->userParams[$this->currentId];
 
 		// Counts pages
-		if (empty($modelParams))
+		if (empty($modelParams['limit']))
 			$results['pages'] = 1;
 		else
+		{
 			$results['pages'] = (int)($results['count'] / $modelParams['limit']);
 			if (($results['count'] % $modelParams['limit']) > 0)
 				$results['pages']++;
+		}
 
 		// Assigning an id to this listing
 		$results['id'] = $this->currentId;
