@@ -38,6 +38,18 @@ class ListingComponent extends Object
 
 
 	/**
+	 * Default allowed user parameters
+	 *
+	 * @var array
+	 */
+	public $defaultAllowedUserParams = array (
+		'order' => array (),
+		'limit' => array (),
+		'search' => array (),
+	);
+
+
+	/**
 	 * Initialization
 	 * 
 	 * @param object $controller
@@ -142,7 +154,11 @@ class ListingComponent extends Object
 
 		$results['page'] = $modelParams['page'];
 		$results['URIRegex'] = $this->URIRegex;
+
+		// Allowed params (userful for the helper)
+		$params['user'] = array_merge($this->defaultAllowedUserParams, $params['user']);
 		$results['allowedUserParams'] = $params['user'];
+
 		$results['modelName'] = $model->alias;
 		
 		// An important variable for the Listing helper
@@ -200,7 +216,7 @@ class ListingComponent extends Object
 			if (in_array($userParams['limit'], $allowed['limit']))
 				$modelParams['limit'] = $userParams['limit'];
 
-		if (isset($userParams['order']) && isset($allowd['order']))
+		if (isset($userParams['order']) && isset($allowed['order']))
 			if (in_array($userParams['order'], $allowed['order']))
 				$modelParams['order'] = $userParams['order'];
 

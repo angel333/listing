@@ -284,11 +284,19 @@ class ListingHelper extends AppHelper
 		$output .= '</tr><tr>';
 		$code .= "\t\t</tr>\n\t\t<tr>\n";
 
-		foreach ($listing['schema'] as $model)
+		foreach ($listing['schema'] as $modelName => $model)
 			foreach ($model as $field)
 			{
-				$output .= '<th>' . $this->sortLink($listing, $field) . '</th>';
-				$code .= "\t\t\t<th><?=\$listing->sortLink(\$$emulate, '$field')?></th>\n";
+				if (in_array("$modelName.$field", $listing['allowedUserParams']['order']))
+				{
+					$output .= '<th>' . $this->sortLink($listing, "$modelName.$field") . '</th>';
+					$code .= "\t\t\t<th><?=\$listing->sortLink(\$$emulate, '$modelName.$field')?></th>\n";
+				}
+				else
+				{
+					$output .= "<th>$field</th>";
+					$code .= "\t\t\t<th>$field</th>\n";
+				}
 			}
 
 		$output .= '</tr>';
