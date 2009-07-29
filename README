@@ -86,29 +86,30 @@ Let's say we have PostsController and Post model. We want to list all posts.
    The array has part 'default' and 'user'. In 'default' are just parameters for
    the model method. In 'user' you can specify, what the user can change and how.
 
-4) To the view method of this just write this:
+4) Into the view just write this:
 
    <?=$listing->scaffold($data)?>
 
-5) Now you shoud get table with results, search boxes, pagination and sort links,
-   but the most important is the textarea on the end of the scaffold - just copy
-   the code from it and paste it into your view (replace the line you added in the
-   previous step). Now you can easily modify the view code and make it look better.
+5) Now refresh your browser - you should see a table with results, search boxes,
+   pagination and sort links, but the most important is the textarea at the end
+   of the scaffold - just copy the code from it and paste it into your view (replace
+   the line you've added in the previous step). Now you can easily modify the view
+   code and make it look better.
 
 
 Multiple listings on one page:
 ------------------------------
-This plugin can handle as many listings as you want. Just pass them to your view.
+This plugin can handle as many listings as you like. Just pass them to your view.
 
 
 Scaffolds:
 ----------
-Scaffold is very useful feature - when you're creating the listing (in controller),
-use only scaffold in view ( $listing->scaffold($data) ), when you're done, just copy
-the code from the textarea to view and modify it.
+Scaffold is a very useful feature - when you're creating the listing (in controller),
+use only scaffold in view ( $listing->scaffold($data) ), when your controller is ready,
+just copy the code from the textarea to your view and modify it.
 
 If your listing variable (in view) is not called $data, pass the name of the variable
-as second parameter to scaffold, e.g.:
+as the second parameter to scaffold, e.g.:
 
   $listing->scaffold($activeUsers, 'activeUsers')
 
