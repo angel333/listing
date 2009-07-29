@@ -274,11 +274,22 @@ class ListingHelper extends AppHelper
 		$output .= '<fieldset><legend>Results</legend><table><tr>';
 		$code .= "<fieldset><legend>Results</legend>\n\t<table>\n\t\t<tr>\n";
 
-		foreach ($listing['schema'] as $item)
+		foreach ($listing['schema'] as $modelName => $model)
 		{
-			$output .= '<th>' . $this->sortLink($listing, $item) . '</th>';
-			$code .= "\t\t\t<th><?=\$listing->sortLink(\$$emulate, '$item')?></th>\n";
+			$fields = count($model);
+			$output .= "<th colspan='$fields'>" . $modelName . '</th>';
+			$code .= "\t\t\t<th colspan='$fields'>$modelName</th>\n";
 		}
+
+		$output .= '</tr><tr>';
+		$code .= "\t\t</tr>\n\t\t<tr>\n";
+
+		foreach ($listing['schema'] as $model)
+			foreach ($model as $field)
+			{
+				$output .= '<th>' . $this->sortLink($listing, $field) . '</th>';
+				$code .= "\t\t\t<th><?=\$listing->sortLink(\$$emulate, '$field')?></th>\n";
+			}
 
 		$output .= '</tr>';
 		$code .= "\t\t</tr>\n";
@@ -286,19 +297,18 @@ class ListingHelper extends AppHelper
 		foreach ($listing['data'] as $row)
 		{
 			$output .= '<tr>';
-			foreach ($row[$listing['modelName']] as $column)
-				$output .= "<td>$column</td>";
+			foreach ($listing['schema'] as $modelName => $fields)
+				foreach ($fields as $fieldName => $field)
+					$output .= "<td>{$row[$modelName][$field]}</td>";
 			$output .= '</tr>';
 		}
 
 		$code .= "\t\t<?foreach(\${$emulate}['data'] as \$item):?>\n";
 		$code .= "\t\t\t<tr>\n";
 
-		foreach ($listing['schema']	as $item)
-		{
-			$exploded = explode('.', $item);
-			$code .= "\t\t\t\t<td><?=\$item['{$exploded[0]}']['{$exploded[1]}']?></td>\n";
-		}
+		foreach ($listing['schema']	as $modelName => $model)
+			foreach ($model as $fieldName)
+				$code .= "\t\t\t\t<td><?=\$item['{$modelName}']['{$fieldName}']?></td>\n";
 
 		$code .= "\t\t\t</tr>\n";
 		$code .= "\t\t<?endforeach?>\n";
@@ -339,9 +349,13 @@ class ListingHelper extends AppHelper
 	{
 		return "
 			<style>
-			div.listingScaffold th a { color: white; }
+			div.listingScaffold,
+			div.listingScaffold th,
+			div.listingScaffold td
+   				{ font-size: 0.8em; font-family: arial; }
+			div.listingScaffold th a { color: red; }
 			div.listingScaffold table { border-collapse: collapse; width: 100%; }
-			div.listingScaffold table th { background: black; color: white; }
+			div.listingScaffold table th { background: rgb(200,200,200); border: 1px solid black; }
 			div.listingScaffold table td { border: 1px solid black; }
 			div.listingScaffold textarea { width: 100%; height: 500px; background: black; color: white; }
 			</style>

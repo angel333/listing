@@ -130,15 +130,15 @@ class ListingComponent extends Object
 
 		// <<< GET THE RESULTS >>>
 		$results = array();
-		$results['data'] = $model->$params['method']('all', $modelParams);
-		$results['count'] = $model->$params['method']('count', array ('conditions' => $modelParams['conditions']));
 
-		$results['schema'] = array();
-		if (empty($modelParams['fields']))
-			foreach ($model->_schema as $key => $val)
-				$results['schema'][] = "{$model->alias}.$key";
-		else
-			$results['schema'] = $modelParams['fields'];
+		$results['data'] = $model->$params['method']('all', $modelParams);
+
+		$results['count'] = $model->$params['method']('count', array (
+			'conditions' => $modelParams['conditions'],
+			'contain' => $modelParams['contain'],
+		));
+
+		$results['schema'] = $this->getSchema($results['data']);
 
 		$results['page'] = $modelParams['page'];
 		$results['URIRegex'] = $this->URIRegex;
@@ -196,14 +196,44 @@ class ListingComponent extends Object
 					if (in_array("$key.$key2", $allowed['search']))
 						$modelParams['conditions']["$key.$key2 LIKE"] = "%$val2%";
 
-		if (isset($userParams['limit']))
+		if (isset($userParams['limit']) && isset($allowed['limit']))
 			if (in_array($userParams['limit'], $allowed['limit']))
 				$modelParams['limit'] = $userParams['limit'];
 
-		if (isset($userParams['order']))
+		if (isset($userParams['order']) && isset($allowd['order']))
 			if (in_array($userParams['order'], $allowed['order']))
 				$modelParams['order'] = $userParams['order'];
 
 		return $modelParams;
+	}
+
+
+	/**
+	 * Gets schema (column names) of results given
+	 *
+	 * @var array $data
+	 * @return array
+	 */
+	private function getSchema ($data)
+	{
+		$schema = array ();
+
+		if (empty($data) || !is_array($data) || count($data) == 0)
+			return null;
+		else
+		{
+			$row = $data[0];
+			foreach ($row as $modelName => $model)
+			{
+				// hasMany
+				if (isset($model[0]))
+					$model = $model[0];
+
+				foreach ($model as $field => $val)
+					$schema[$modelName][] = $field;
+			}
+		}
+
+		return $schema;
 	}
 }
