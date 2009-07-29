@@ -360,8 +360,8 @@ class ListingHelper extends AppHelper
 			div.listingScaffold,
 			div.listingScaffold th,
 			div.listingScaffold td
-   				{ font-size: 0.8em; font-family: arial; }
-			div.listingScaffold th a { color: red; }
+   				{ font-family: arial; }
+			div.listingScaffold th a { color: red; text-decoration: none; }
 			div.listingScaffold table { border-collapse: collapse; width: 100%; }
 			div.listingScaffold table th { background: rgb(200,200,200); border: 1px solid black; }
 			div.listingScaffold table td { border: 1px solid black; }

@@ -145,10 +145,15 @@ class ListingComponent extends Object
 
 		$results['data'] = $model->$params['method']('all', $modelParams);
 
-		$results['count'] = $model->$params['method']('count', array (
-			'conditions' => $modelParams['conditions'],
-			'contain' => $modelParams['contain'],
-		));
+		// Count results
+		$modelCountParams = $modelParams;
+		if (isset($modelCountParams['fields']))
+			unset($modelCountParams['fields']);
+		if (isset($modelCountParams['page']))
+			unset($modelCountParams['page']);
+		if (isset($modelCountParams['offset']))
+			unset($modelCountParams['offset']);
+		$results['count'] = $model->$params['method']('count', $modelCountParams);
 
 		$results['schema'] = $this->getSchema($results['data']);
 
