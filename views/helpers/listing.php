@@ -96,7 +96,7 @@ class ListingHelper extends AppHelper
 			$userParams[$listing['id']] = array_merge($userParams[$listing['id']], $changes);
 
 		// encode!
-		$encoded = base64_encode(serialize($userParams));
+		$encoded = base64_encode(json_encode($userParams));
 
 		// and make the uri..
 		$uri = preg_replace('/:listingVars/', $encoded, $listing['URIRegex']);
@@ -201,6 +201,35 @@ class ListingHelper extends AppHelper
 
 
 	/**
+	 * Returns a link for a filter.
+	 *
+	 * If you'll pass null in filter parameter, it'll cancel all filters
+	 *
+	 * @param array $listing View listing variable
+	 * @param string $filter Filter name
+	 * @param string $text A text, shown to user
+	 * @return string 
+	 */
+	public function filterLink ($listing, $filter = null, $text = null)
+	{
+		if (!$text)
+		{
+			if (!$filter)
+				$text = 'All';
+			else
+				$text = $filter;
+		}
+
+		$newURI = $this->getURI($listing, array (
+			'filter' => $filter,
+			'page' => 1,
+		));
+
+		return "<a href='$newURI'>$text</a>";
+	}
+
+
+	/**
 	 * Creates scaffold of the listing
 	 *
 	 * Also creates a textarea with code you can just copy & paste
@@ -241,6 +270,26 @@ class ListingHelper extends AppHelper
 
 			$output .= $this->formEnd($listing);
 			$code .= "\t<?=\$listing->formEnd(\$$emulate)?>\n";
+
+			$output .= '</fieldset>';
+			$code .= "</fieldset>\n\n";
+		}
+
+
+		// User filters - links
+		if (!empty($listing['allowedUserParams']['filters']))
+		{
+			$output .= '<fieldset><legend>Filters</legend>';
+			$code .= "<fieldset><legend>Filters</legend>\n";
+
+			$output .= $this->filterLink($listing) . '<br/>';
+			$code .= "\t\t<?=\$listing->filterLink(\$$emulate)?><br/>\n";
+
+			foreach ($listing['allowedUserParams']['filters'] as $filterName => $filter)
+			{
+				$output .= $this->filterLink($listing, $filterName) . '<br/>';
+				$code .= "\t\t<?=\$listing->filterLink(\$$emulate, '$filterName')?><br/>\n";
+			}
 
 			$output .= '</fieldset>';
 			$code .= "</fieldset>\n\n";

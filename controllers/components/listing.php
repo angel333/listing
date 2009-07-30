@@ -46,6 +46,7 @@ class ListingComponent extends Object
 		'order' => array (),
 		'limit' => array (),
 		'search' => array (),
+		'filters' => array (),
 	);
 
 
@@ -76,7 +77,7 @@ class ListingComponent extends Object
 		// Save listingVars (the param in config/routes.php) to $this->userParams - or just empty array if not any
 		if (
 			empty($this->controller->params['listingVars']) ||
-			!($this->userParams = unserialize(base64_decode($this->controller->params['listingVars']))) ||
+			!($this->userParams = json_decode(base64_decode($this->controller->params['listingVars']), true)) ||
 			!is_array($this->userParams)
 		)
 			$this->userParams = array ();
@@ -99,7 +100,7 @@ class ListingComponent extends Object
 					// Go to first page when params are changed.
 					$this->userParams[$id]['page'] = 1;
 
-					$encoded = base64_encode(serialize($this->userParams));
+					$encoded = base64_encode(json_encode($this->userParams));
 					$newURI = preg_replace('/:listingVars/', $encoded, $this->URIRegex);
 					$controller->redirect($newURI);
 				}
@@ -224,6 +225,10 @@ class ListingComponent extends Object
 		if (isset($userParams['order']) && isset($allowed['order']))
 			if (in_array($userParams['order'], $allowed['order']))
 				$modelParams['order'] = $userParams['order'];
+
+		if (isset($userParams['filter']) && isset($allowed['filters']))
+			if (isset($allowed['filters'][$userParams['filter']]))
+				$modelParams['conditions'] = array_merge($modelParams['conditions'], $allowed['filters'][$userParams['filter']]);
 
 		return $modelParams;
 	}

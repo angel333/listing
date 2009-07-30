@@ -83,8 +83,9 @@ Let's say we have PostsController and Post model. We want to list all posts.
        ),
    )));
 
-   The array has part 'default' and 'user'. In 'default' are just parameters for
-   the model method. In 'user' you can specify, what the user can change and how.
+   The parameters array contains parts 'default' and 'user'. In 'default' are just
+   parameters for the find method. In 'user' you can specify, what the user can change
+   and how.
 
 4) Into the view just write this:
 
@@ -114,3 +115,21 @@ as the second parameter to scaffold, e.g.:
   $listing->scaffold($activeUsers, 'activeUsers')
 
 .. the code in textarea will use this name instead of $data.
+
+
+Filters:
+--------
+Let's say you have 'published' field in your posts table. And you want to let the user
+select if he wants to display published or not published posts. To your 'user' section of
+Listing->create() method add this:
+
+'filters' => array (
+    'Published posts' => array (
+        'Post.published' => true,
+    ),
+    'Not Published' => array (
+        'Post.published' => false,
+    ),
+),
+
+.. now check the links that appeared in your scaffold.
