@@ -28,13 +28,19 @@ class ListingComponent extends Object
 
 
 	/**
-	 * URI regex - it's just what you have in your routes.php
-	 *
-	 * Something like: '/blabla/:listingVars'
+	 * URI prefix (useful for the helper)
 	 *
 	 * @var string
 	 */
-	public $URIRegex = null;
+	public $URIPrefix = null;
+
+
+	/**
+	 * URI sufix (useful for the helper)
+	 *
+	 * @var string
+	 */
+	public $URISuffix = null;
 
 
 	/**
@@ -59,10 +65,26 @@ class ListingComponent extends Object
 	{
 		$this->controller =& $controller;
 
-		if (empty($this->URIRegex))
+		// setting the url prefix and suffix
+		if (empty($this->URIPrefix) && empty($this->URISuffix))
 		{
-			$route = Router::currentRoute();
-			$this->URIRegex = $route[0];
+			$alreadyInURI = preg_match('#(.*/)(listing:[a-zA-z0-9=]*)(.*)#', $this->controller->here, $matches);
+
+			if ($alreadyInURI)
+			{
+				$this->URIPrefix = $matches[1] . 'listing:';
+				$this->URISuffix = $matches[3];
+			}
+			else
+			{
+				$this->URIPrefix = $this->controller->here;
+				$this->URISuffix = '';
+
+				if (substr($this->URIPrefix, 0, -1) != '/')
+					$this->URIPrefix .= '/';
+
+				$this->URIPrefix .= 'listing:';
+			}
 		}
 	}
 
@@ -76,8 +98,8 @@ class ListingComponent extends Object
 	{
 		// Save listingVars (the param in config/routes.php) to $this->userParams - or just empty array if not any
 		if (
-			empty($this->controller->params['listingVars']) ||
-			!($this->userParams = json_decode(base64_decode($this->controller->params['listingVars']), true)) ||
+			empty($this->controller->params['named']['listing']) ||
+			!($this->userParams = json_decode(base64_decode($this->controller->params['named']['listing']), true)) ||
 			!is_array($this->userParams)
 		)
 			$this->userParams = array ();
@@ -101,7 +123,7 @@ class ListingComponent extends Object
 					$this->userParams[$id]['page'] = 1;
 
 					$encoded = base64_encode(json_encode($this->userParams));
-					$newURI = preg_replace('/:listingVars/', $encoded, $this->URIRegex);
+					$newURI =  $this->URIPrefix . $encoded . $this->URISuffix;
 					$controller->redirect($newURI);
 				}
 			}
@@ -159,7 +181,8 @@ class ListingComponent extends Object
 		$results['schema'] = $this->getSchema($results['data']);
 
 		$results['page'] = $modelParams['page'];
-		$results['URIRegex'] = $this->URIRegex;
+		$results['URIPrefix'] = $this->URIPrefix;
+		$results['URISuffix'] = $this->URISuffix;
 
 		// Allowed params (userful for the helper)
 		$params['user'] = array_merge($this->defaultAllowedUserParams, $params['user']);

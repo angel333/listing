@@ -98,10 +98,8 @@ class ListingHelper extends AppHelper
 		// encode!
 		$encoded = base64_encode(json_encode($userParams));
 
-		// and make the uri..
-		$uri = preg_replace('/:listingVars/', $encoded, $listing['URIRegex']);
-
-		return $uri;
+		// and return the uri..
+		return $listing['URIPrefix'] . $encoded . $listing['URISuffix'];
 	}
 
 
