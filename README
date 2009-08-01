@@ -52,17 +52,21 @@ Let's say we have PostsController and Post model. We want to list all posts.
        public $helpers = array ('Listing.Listing');
        ...
 
-2) You need a parameter where the information about current page, etc. will be
-   stored. So add it to your custom route in the config/routes.php - it must be
-   named 'listingVars'. (Note: This is the main trick of this plugin - it uses
-   only one parameter for everything - this parameter is actualy a serialized
-   array, encoded with base64_encode. It contains current page and sorting for
-   all listings on the page. That's why you can use multiple listings easily.)
+2) The information about current page, etc. are stored in a named parameter
+   'listing'. If use default routing, you don't have to make any changes in
+   your your routes.php file. If you use a custom routes for the controller,
+   just make sure you have a star at the end of the route pattern.
 
-   Router::connect('/all-posts/:listingVars', array ('controller' => 'posts', 'action' => 'index'));
+   Router::connect('/all-posts/*', array ('controller' => 'posts', 'action' => 'index'));
 
-3) Now add to your index() method in PostsController (controllers/posts_controller.php)
-   something like this:
+   (Note: This is the main trick of this plugin - it uses only one parameter
+   for everything - this parameter is actualy a serialized array, encoded with
+   base64_encode(). It contains current page and sorting for all listings on the
+   page. That's why you can use multiple listings easily.)
+
+3) Now add to your index() method in PostsController something like this:
+
+   (controllers/posts_controller.php)
 
    $this->set('data', $this->Listing->create($this->Post, array (
        'default' => array (
@@ -83,9 +87,9 @@ Let's say we have PostsController and Post model. We want to list all posts.
        ),
    )));
 
-   The parameters array contains parts 'default' and 'user'. In 'default' are just
-   parameters for the find method. In 'user' you can specify, what the user can change
-   and how.
+   The parameters array contains parts 'default' and 'user'. In 'default' are
+   just parameters for the find method. In 'user' you can specify, what the
+   user can change and how.
 
 4) Into the view just write this:
 
@@ -93,9 +97,9 @@ Let's say we have PostsController and Post model. We want to list all posts.
 
 5) Now refresh your browser - you should see a table with results, search boxes,
    pagination and sort links, but the most important is the textarea at the end
-   of the scaffold - just copy the code from it and paste it into your view (replace
-   the line you've added in the previous step). Now you can easily modify the view
-   code and make it look better.
+   of the scaffold - just copy the code from it and paste it into your view
+   (replace the line you've added in the previous step). Now you can easily
+   modify the view code and make it look better.
 
 
 Multiple listings on one page:
