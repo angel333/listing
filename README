@@ -138,6 +138,7 @@ Listing->create() method add this:
 
 .. now check the links that appeared in your scaffold.
 
+
 Custom method
 -------------
 Listing uses Model::find() by default. If you want to use your own method, just
