@@ -137,3 +137,33 @@ Listing->create() method add this:
 ),
 
 .. now check the links that appeared in your scaffold.
+
+Custom method
+-------------
+Listing uses Model::find() by default. If you want to use your own method, just
+add parameter 'method' to your parameters:
+
+$this->set('data', $this->Listing->create($this->Post, array (
+    'method' => 'myFind',
+    'default' => array (
+	    ...
+    ),
+    'user' => array (
+	    ...
+    ),
+)));
+
+Your method needs take paramters in the same form as the original find() -
+$operation and $params. Listing requires only 'all' and 'count' operations:
+
+public function myFind ($operation, $params)
+{
+    if ($operation == 'all')
+    {
+        ...
+    }
+    elseif ($operation == 'count')
+    {
+        ...
+    }
+}
