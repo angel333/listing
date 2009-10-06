@@ -73,7 +73,7 @@ class ListingHelper extends AppHelper
 	public function paginationLink ($text, $uri, $clickable = true)
 	{
 		if ($clickable)
-			return "<a href='$uri' title='$text'>$text</a>";
+			return "<span><a href='$uri' title='$text'>$text</a></span>";
 
 		return "<span>$text</span>";
 		

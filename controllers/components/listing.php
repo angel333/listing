@@ -52,6 +52,7 @@ class ListingComponent extends Object
 		'order' => array (),
 		'limit' => array (),
 		'search' => array (),
+		'searchExact' => array (),
 		'filters' => array (),
 	);
 
@@ -185,6 +186,8 @@ class ListingComponent extends Object
 		$results['URISuffix'] = $this->URISuffix;
 
 		// Allowed params (userful for the helper)
+		if (!isset($params['user']) || !is_array($params['user']))
+			$params['user'] = array ();
 		$params['user'] = array_merge($this->defaultAllowedUserParams, $params['user']);
 		$results['allowedUserParams'] = $params['user'];
 
@@ -235,11 +238,20 @@ class ListingComponent extends Object
 			$modelParams['page'] = 1;
 
 		// Validation of parameters from user
+		
 		if (isset($userParams['search']))
+		{
 			foreach ($userParams['search'] as $key => $val)
 				foreach ($val as $key2 => $val2)
+				{
+					// search (LIKE %x%)
 					if (in_array("$key.$key2", $allowed['search']))
 						$modelParams['conditions']["$key.$key2 LIKE"] = "%$val2%";
+					// searchExact (= x)
+					elseif (in_array("$key.$key2", $allowed['searchExact']))
+						$modelParams['conditions']["$key.$key2"] = "$val2";
+				}
+		}
 
 		if (isset($userParams['limit']) && isset($allowed['limit']))
 			if (in_array($userParams['limit'], $allowed['limit']))
