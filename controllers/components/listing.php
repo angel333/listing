@@ -290,8 +290,11 @@ class ListingComponent extends Object
 				if (isset($model[0]))
 					$model = $model[0];
 
-				foreach ($model as $field => $val)
-					$schema[$modelName][] = $field;
+				if (is_array($model))
+					foreach ($model as $field => $val)
+						$schema[$modelName][] = $field;
+				else
+					$schema['standalone'][] = $modelName;
 			}
 		}
 
